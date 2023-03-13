@@ -1,9 +1,21 @@
 #include <Arduino.h>
+#include <config.h>
+#include <declarations.h>
+
+#include <subaru_ssm.h>
+#include <gauge_tft.h>
+#include <sd_logger.h>
 
 void setup() {
-  // put your setup code here, to run once:
+  Serial.begin(SERIAL_MONITOR_BAUD);
+
+  loggerBegin();
+  gaugesBegin();
+
+  ssmBegin();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
+
 }
