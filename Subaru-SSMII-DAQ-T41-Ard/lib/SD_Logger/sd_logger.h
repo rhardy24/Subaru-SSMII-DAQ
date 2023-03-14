@@ -25,4 +25,7 @@
     **************************************************************************/
     // initializes the sd logger
     bool loggerBegin();
+
+    // logs values currently in the ECU_Data struct to the log file (SD card)
+    void logCurrentValues(File log, ECU_Data* data);
 #endif

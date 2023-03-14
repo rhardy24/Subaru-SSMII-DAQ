@@ -3,6 +3,7 @@
 #include <declarations.h>
 
 #include <sd_logger.h>
+#include <subaru_ssm.h>
 
 
 /*************************************************************************
@@ -29,4 +30,10 @@ bool loggerBegin(){
     logFile.flush();
 
     return true;
+}
+
+// logs values currently in the ECU_Data struct to the log file (SD card)
+void logCurrentValues(File log, ECU_Data* data){
+  outputValues(log, data);
+  log.flush();
 }

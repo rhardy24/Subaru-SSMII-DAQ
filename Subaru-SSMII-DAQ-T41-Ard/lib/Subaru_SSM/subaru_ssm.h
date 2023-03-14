@@ -1,3 +1,8 @@
+/*
+    To understand the SSM protocol, packet formatting, and requests, see:
+    https://www.romraider.com/RomRaider/SsmProtocol
+*/
+
 #include <Arduino.h>
 #include <config.h>
 #include <declarations.h>
@@ -66,7 +71,25 @@
      * FUNCTION PROTOTYPES
     **************************************************************************/
 
-    //Initializes SSM
+    // Initializes SSM
     bool ssmBegin();
+
+    // Sends re
+    bool receiveECUdata();
+
+    // prints the raw hex bytes received from the ECU to the stream of choice
+    void printECUbytes(Stream &outStream);
+
+    /*
+        Calculates the checksum based on the sum byte inputted into the function.
+        Just returns the 8 least significant bits of the input byte
+    */
+    byte calculateChecksum(byte sum);
+
+    // writes the request packet over serial to go to the ECU
+    void writeSSM(byte requestMessage[]);
+
+    // reads the raw data from the ECU off of the serial line
+    bool readECU(int* rawDataArray);
 
 #endif

@@ -200,10 +200,6 @@ void setup()
 
 bool responseGood = 0;
 
-/*************************************************************************
- * LEFT-OFF HERE IN THE CODE CONVERSION
-**************************************************************************/
-
 void loop()
 {
 curTime = millis();
@@ -434,6 +430,10 @@ boolean readECU(int* dataArray, boolean nonZeroes)
   }
   
 }
+
+/*************************************************************************
+ * LEFT-OFF HERE IN THE CODE CONVERSION
+**************************************************************************/
 
 bool interpretData(ECU_Data* interpData, int* rawArray){
   if(rawArray[1] != 0xf0) //ignore anything that isn't being sent to the diagnostic tool (us)

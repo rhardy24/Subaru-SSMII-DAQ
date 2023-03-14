@@ -2,6 +2,8 @@
 #include <config.h>
 #include <declarations.h>
 
+#include <subaru_ssm.h>
+
 #ifndef GAUGE_TFT_H
 #define GAUGE_TFT_H
 
@@ -49,6 +51,8 @@
     **************************************************************************/
     //initializes the tft gauge display
     bool gaugesBegin();
+
+    bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum);
 
     /*************************************************************************
      * OTHER DEFINITIONS
