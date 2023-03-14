@@ -5,10 +5,32 @@
 
 #include <Arduino.h>
 #include <config.h>
-#include <declarations.h>
 
 #include <subaru_ssm.h>
-#include <sd_logger.h>
+
+/*************************************************************************
+ * VARIABLE DEFINITIONS
+**************************************************************************/
+//stores time from millis() when previous message was read
+uint32_t prevReadTime;
+
+// data request message
+byte ssmReqMessage[REQUEST_MESSAGE_SIZE] = {  0x80, 0x10, 0xf0, 0x20, 0xa8, 0x01, 
+                                            0x00, 0x00, 0x08, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x10, 
+                                            0x00, 0x00, 0x11, 0x00, 0x00, 0x12, 0x00, 0x00, 0x15, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x2a, 
+                                            0x09    };
+
+//array to store the raw hex bytes received from the ECU
+uint8_t ECUbytes[RECEIVE_MESSAGE_SIZE];
+
+//true if the resposne from the ECU was good (correct format, sent to this device, good checksum)
+bool responseGood;
+
+/*************************************************************************
+ * INSTATIATION DEFINITIONS
+**************************************************************************/
+//struct holding the interpretted ECU data
+ECU_Data interpretted_data = {};
 
 /*************************************************************************
  * FUNCTIONS
@@ -37,7 +59,7 @@ bool receiveECUdata(){
     printECUbytes(Serial);
     
     if(responseGood){
-        interpretData(&interpretted_data, ECUbytes);
+        interpretECUdata(&interpretted_data, ECUbytes);
         Serial.println();
         outputHeaders(Serial);
         outputValues(Serial, &interpretted_data);
@@ -141,4 +163,57 @@ bool readECU(uint8_t* rawDataArray){
                 sumBytes += currentByte;
         }
     }
+}
+
+// takes in the rawhex data received from the ECU, applies the interpretation calculations to get a readable value
+bool interpretECUdata(ECU_Data* interpData, uint8_t* rawArray){
+    if(rawArray[1] != 0xf0) //ignore anything that isn't being sent to the diagnostic tool (us)
+        return false;
+  
+    interpData->ECT = rawArray[5]-40;        //deg C
+    interpData->MAP = rawArray[6]*37.0/255;    //absolute PSI
+    interpData->RPM = (rawArray[8] | (rawArray[7] << 8))/4.0;    //RPM
+    interpData->speedkm = rawArray[9];         //km/h
+    interpData->timing = (rawArray[10]-128)/2.0;     //degrees BTDC
+    interpData->IAT = rawArray[11]-40;       //deg C
+    interpData->TPS = rawArray[12]*100/255.0;  //percent
+    interpData->BATVOLT = rawArray[13]*0.08; //volt
+    interpData->EFT = rawArray[14]-40;       //deg C
+    return true;
+}
+
+// outputs interpretted ECU data to the specified stream (serial, file, etc.)
+void outputValues(Stream &outStream, ECU_Data* data){
+    outStream.println();
+    outStream.print(data->RPM);
+
+    outStream.print("\t");
+    outStream.print(data->speedkm);
+
+    outStream.print("\t");
+    outStream.print(data->TPS);
+
+    outStream.print("\t");
+    outStream.print(data->MAP);
+
+    outStream.print("\t");
+    outStream.print(data->timing);
+
+    outStream.print("\t");
+    outStream.print(data->ECT);
+
+    outStream.print("\t");
+    outStream.print(data->IAT);
+
+    outStream.print("\t");
+    outStream.print(data->EFT);
+
+    outStream.print("\t");
+    outStream.print(data->BATVOLT);
+}
+
+// logs values currently in the ECU_Data struct to the log file (SD card)
+void logCurrentValues(File log, ECU_Data* data){
+  outputValues(log, data);
+  log.flush();
 }

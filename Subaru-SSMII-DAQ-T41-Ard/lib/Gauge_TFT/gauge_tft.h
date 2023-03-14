@@ -1,17 +1,15 @@
 #include <Arduino.h>
 #include <config.h>
-#include <declarations.h>
 
-#include <subaru_ssm.h>
-
-#ifndef GAUGE_TFT_H
-#define GAUGE_TFT_H
+#ifndef GAUGE_TFT__H_
+#define GAUGE_TFT__H_
 
     /*************************************************************************
      * EXTERNAL INCLUDES
     **************************************************************************/
     #include <SPI.h>
     #include <Adafruit_ILI9341.h>
+    #include <subaru_ssm.h>
 
     /*************************************************************************
      * DATA STRUCTURES
@@ -27,7 +25,7 @@
         bool tps = true;
         bool batvolt = true;
         bool eft = true;
-    } gauge_status;
+    } gauge_status_t;
 
 
     /*************************************************************************
@@ -42,9 +40,10 @@
 
 
     /*************************************************************************
-     * INSTANTIATIONS
+     * INSTANTIATION DECLARATIONS
     **************************************************************************/
-    Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+    extern Adafruit_ILI9341 tft;
+    extern gauge_status_t gauge_status;
 
     /*************************************************************************
      * FUNCTION PROTOTYPES
@@ -52,8 +51,83 @@
     //initializes the tft gauge display
     bool gaugesBegin();
 
+    // takes values from the ECU_Data struct to update the tft gauges
     bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum);
 
+    /*
+    This method will draw a vertical bar graph for single input
+  
+    &d = display object name
+    x = position of bar graph (lower left of bar)
+    y = position of bar (lower left of bar
+    w = width of bar graph
+    h =  height of bar graph (does not need to be the same as the max scale)
+    loval = lower value of the scale (can be negative)
+    hival = upper value of the scale
+    inc = scale division between loval and hival
+    curval = date to graph (must be between loval and hival)
+    dig = format control to set number of digits to display (not includeing the decimal)
+    dec = format control to set number of decimals to display (not includeing the decimal)
+    barcolor = color of bar graph
+    voidcolor = color of bar graph background
+    bordercolor = color of the border of the graph
+    textcolor = color of the text
+    backcolor = color of the bar graph's background
+    label = bottom lable text for the graph
+    redraw = flag to redraw display only on first pass (to reduce flickering)
+  
+    */
+    void DrawBarChartV(Adafruit_ILI9341 & d, double x , double y , double w, double h , double loval , double hival , double inc , double curval ,  int dig , int dec, unsigned int barcolor, unsigned int voidcolor, unsigned int bordercolor, unsigned int textcolor, unsigned int backcolor, String label, boolean & redraw);
+  
+    /*
+    This method will draw a dial-type graph for single input
+  
+    &d = display object name
+    cx = center position of dial
+    cy = center position of dial
+    r = radius of the dial
+    loval = lower value of the scale (can be negative)
+    hival = upper value of the scale
+    inc = scale division between loval and hival
+    sa = sweep angle for the dials scale
+    curval = date to graph (must be between loval and hival)
+    dig = format control to set number of digits to display (not includeing the decimal)
+    dec = format control to set number of decimals to display (not includeing the decimal)
+    needlecolor = color of the needle
+    dialcolor = color of the dial
+    textcolor = color of all text (background is dialcolor)
+    label = bottom lable text for the graph
+    redraw = flag to redraw display only on first pass (to reduce flickering)
+    */
+    void DrawDial(Adafruit_ILI9341 & d, int cx, int cy, int r, double loval , double hival , double inc, double sa, double curval,  int dig , int dec, unsigned int needlecolor, unsigned int dialcolor, unsigned int  textcolor, String label, boolean & redraw) ;
+
+    /*
+    This method will draw a horizontal bar graph for single input
+  
+    &d = display object name
+    x = position of bar graph (upper left of bar)
+    y = position of bar (upper left of bar (add some vale to leave room for label)
+    w = width of bar graph (does not need to be the same as the max scale)
+    h =  height of bar graph
+    loval = lower value of the scale (can be negative)
+    hival = upper value of the scale
+    inc = scale division between loval and hival
+    curval = date to graph (must be between loval and hival)
+    dig = format control to set number of digits to display (not includeing the decimal)
+    dec = format control to set number of decimals to display (not includeing the decimal)
+    barcolor = color of bar graph
+    voidcolor = color of bar graph background
+    bordercolor = color of the border of the graph
+    textcolor = color of the text
+    back color = color of the bar graph's background
+    label = bottom lable text for the graph
+    redraw = flag to redraw display only on first pass (to reduce flickering)
+    */
+    void DrawBarChartH(Adafruit_ILI9341 & d, double x , double y , double w, double h , double loval , double hival , double inc , double curval ,  int dig , int dec, unsigned int barcolor, unsigned int voidcolor, unsigned int bordercolor, unsigned int textcolor, unsigned int backcolor, String label, boolean & redraw);
+    
+    // function to format a numerical value into a string with the specified number of digits and decimal points
+    String Format(double val, int dec, int dig ) ;
+    
     /*************************************************************************
      * OTHER DEFINITIONS
     **************************************************************************/

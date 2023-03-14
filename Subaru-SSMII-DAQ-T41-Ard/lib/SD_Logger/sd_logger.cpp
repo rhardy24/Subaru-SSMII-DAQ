@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include <config.h>
-#include <declarations.h>
 
 #include <sd_logger.h>
-#include <subaru_ssm.h>
+
+/*************************************************************************
+ * INSTATIATION DEFINITIONS
+**************************************************************************/
+File logFile;
 
 
 /*************************************************************************
@@ -32,8 +35,7 @@ bool loggerBegin(){
     return true;
 }
 
-// logs values currently in the ECU_Data struct to the log file (SD card)
-void logCurrentValues(File log, ECU_Data* data){
-  outputValues(log, data);
-  log.flush();
+// outputs data column headers to the specified stream (serial, file, etc.)
+void outputHeaders(Stream &outStream){
+  outStream.println("RPM\tSpeed\tTPS\tMAP\tTiming\tECT\tIAT\tEFT\tVoltage");
 }
