@@ -15,24 +15,28 @@ File logFile;
 
 // initializes the sd logger
 bool loggerBegin(){
+  #ifdef DEBUG
     if (!SD.begin(chipSelect)) {
       Serial.println("SD initialization failed!");
     }
     else
       Serial.println("SD Initialized");
+  #endif
 
-    // CORRECT THE FILE NAME
-    logFile = SD.open("newlog.CSV", FILE_WRITE);
+  // CORRECT THE FILE NAME
+  logFile = SD.open("newlog.CSV", FILE_WRITE);
    
+  #ifdef DEBUG
     if(logFile)
       Serial.println("File opened");
     else
       Serial.println("File open failed");
-  
-    outputHeaders(logFile);
-    logFile.flush();
+  #endif
 
-    return true;
+  outputHeaders(logFile);
+  logFile.flush();
+
+  return true;
 }
 
 // outputs data column headers to the specified stream (serial, file, etc.)

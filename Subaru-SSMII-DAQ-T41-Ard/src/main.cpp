@@ -7,9 +7,11 @@
 #include <config.h>
 
 void setup() {
-  Serial.begin(SERIAL_MONITOR_BAUD);
-  while(!Serial)
-    delay(10);
+  #ifdef DEBUB
+    Serial.begin(SERIAL_MONITOR_BAUD);
+    while(!Serial)
+      delay(10);
+  #endif
 
   loggerBegin();
   gaugesBegin();

@@ -51,39 +51,44 @@ bool ssmBegin(){
 
 bool receiveECUdata(){
     delay(10);
-    Serial.println();
+    double curTime = millis();
     if(Serial2.available())
         responseGood = readECU(ECUbytes);
     else{
         responseGood = false;
-        Serial.println("Serial2 unavailable");
+        #ifdef DEBUG
+            Serial.println("Serial2 unavailable");
+        #endif
         return false;
     }
 
-    Serial.print("Response Good: ");
-    Serial.println(responseGood);
-    
-    printECUbytes(Serial);
+    #ifdef DEBUG
+        Serial.print("Response Good: ");
+        Serial.println(responseGood);
+        printECUbytes(Serial);
+    #endif
     
     if(responseGood){
         interpretECUdata(&interpretted_data, ECUbytes);
-        Serial.println();
-        outputHeaders(Serial);
-        outputValues(Serial, &interpretted_data);
+        #ifdef DEBUG
+            Serial.println();
+            outputHeaders(Serial);
+            outputValues(Serial, &interpretted_data);
+        #endif
         prevReadTime = millis();
     }
     else {
         //Clearing the serial receive buffer to get rid of the bad packet
         Serial2.end();
         Serial2.begin(4800);
-        Serial.println("Flush");
+
+        //could try putting a write here to speed up recovery
     }
 
-    if((millis() - prevReadTime) > 50){
+    if((curTime - prevReadTime) > 50){
         writeSSM(ssmReqMessage);
         prevReadTime = millis();
     }
-    Serial2.flush();
     return true;
 }
 
@@ -112,11 +117,12 @@ byte calculateChecksum(byte sum){
 
 // writes the request packet over serial to go to the ECU
 void writeSSM(byte requestMessage[]){
-    Serial.print("Sending packet... ");
     for (byte x = 0; x < REQUEST_MESSAGE_SIZE; x++) {
         Serial2.write(requestMessage[x]);
-        Serial.print(String(requestMessage[x],HEX));
-        Serial.print(",");
+        #ifdef DEBUG
+            Serial.print(String(requestMessage[x],HEX));
+            Serial.print(",");
+        #endif
     }
     Serial2.flush();
     Serial2.end();
@@ -134,44 +140,55 @@ bool readECU(int* rawDataArray){
     uint8_t dataArrayLength = RECEIVE_MESSAGE_SIZE;
     uint8_t loopLength = 20;
 
-    byte zeroesLoopSpot = 0;
-    bool nonZeroes = false;
-
     for (uint8_t i = 0; i < dataArrayLength; i++)
         rawDataArray[i] = 0;
-    Serial.println();
-    for (byte j = 0; j < loopLength; j++){  //try as uint8_t
+    #ifdef DEBUG
+        Serial.println();
+    #endif
+    for (byte j = 0; j < loopLength; j++){ 
         currentByte = Serial2.read();
-        Serial.print(String(currentByte, HEX));
-        Serial.print(", ");
+
+        #ifdef DEBUG
+            Serial.print(String(currentByte, HEX));
+            Serial.print(", ");
+        #endif
+
         delay(READ_DELAY);
+
         rawDataArray[bytePlace] = currentByte;
 
         if (currentByte == 0x80 && dataSize == 0){
             isNewPacket = true;
-            j = 0;                              // CAN I REMOVE THIS
+            j = 0;
         }
 
         if(j == (loopLength-1) && isNewPacket != true) 
             return false;
 
-        if(isNewPacket){   //REMOVE -1 PART
+        if(isNewPacket){ 
             // checking that the beginning of the packet is what we expect
             if((bytePlace == 0 && currentByte != 0x80) || (bytePlace == 1 && currentByte != 0xf0) || (bytePlace == 2 && currentByte != 0x10)){
-                Serial.println("Bad start");
-                return false;
+                #ifdef DEBUG
+                    Serial.println("Bad start");
+                #endif
 
+                return false;
             }
                 
             if (bytePlace == 3){
                 dataSize = currentByte;
                 loopLength = currentByte + 6;
-                Serial.print("Loop length: ");
-                Serial.println(loopLength);
+
+                #ifdef DEBUG
+                    Serial.print("Loop length: ");
+                    Serial.println(loopLength);
+                #endif
 
                 // arbitrary value of 20, another check to make sure the data we are receiving is good
                 if(loopLength > 20){
-                    Serial.println("Loop length too long");
+                    #ifdef DEBUG
+                        Serial.println("Loop length too long");
+                    #endif
                     return false;
                 }
             }
@@ -180,10 +197,14 @@ bool readECU(int* rawDataArray){
 
             if (bytePlace == (dataSize + 5)){
                 if(currentByte != calculateChecksum(sumBytes)){
-                   Serial.println("Bad checksum");
-                   return false; 
+                    #ifdef DEBUG
+                        Serial.println("Bad checksum");
+                    #endif
+                    return false; 
                 }
-                Serial.println("Good checksum");   
+                #ifdef DEBUG
+                    Serial.println("Good checksum"); 
+                #endif
                 return true;
             }
             else
@@ -192,104 +213,6 @@ bool readECU(int* rawDataArray){
     }
 }
 
-/*
-boolean readECU(uint32_t* dataArray)
-{
-  bool nonZeroes = false;
-  byte data = 0;
-  boolean isPacket = false;
-  byte sumBytes = 0;
-  byte checkSumByte = 0;
-  byte dataSize = 0;
-  byte bytePlace = 0;
-  byte zeroesLoopSpot = 0;
-  byte dataArrayLength = RECEIVE_MESSAGE_SIZE;
-  byte loopLength = 20;
-  for (int i = 0; i < RECEIVE_MESSAGE_SIZE; i++)
-    dataArray[i] = 9999;
-  for (byte j = 0; j < loopLength; j++)
-  //for (byte j = 0; j < sizeof(dataArray)/sizeof(int); j++)
-  {
-    data = Serial2.read();
-    Serial.print(String(data,HEX));
-    Serial.print(", ");
-    delay(READ_DELAY);
-    dataArray[bytePlace] = data;
-
-    if (data == 128 && dataSize == 0) { //0x80 or 128 marks the beginning of a packet
-      isPacket = true;
-      j = 0;
-      //Serial.println("Begin Packet");
-    }
-
-    //terminate function and return false if no response is detected
-    if (j == (loopLength - 1) && isPacket != true)
-    {
-      return false;
-    }
-
-    if (isPacket == true && data != -1) {
-  //    Serial.print(data); // for debugging: shows in-packet data
-  //    Serial.print(" ");
-
-      if ( (bytePlace == 0 && data != 0x80) || (bytePlace == 1 && data != 0xf0) || (bytePlace == 2 && data != 0x10) ){
-        Serial.println("Bad start of read");
-        return false;
-      }
-        
-
-      if (bytePlace == 3) { // how much data is coming
-        dataSize = data;
-        loopLength = data + 6;
-        if (loopLength > 20){
-          Serial.println("Loop length too long");
-          return false;
-        }
-          
-      }
-
-      if (bytePlace > 4 && bytePlace - 5 < dataArrayLength && nonZeroes == false)
-      {
-        //dataArray[bytePlace - 5] = data;
-      }
-      else if (bytePlace > 4 && zeroesLoopSpot < dataArrayLength / 2 && nonZeroes == true && data != 0 && bytePlace < dataSize + 4)
-      {
-        //dataArray[zeroesLoopSpot] = data;
-        //dataArray[zeroesLoopSpot + (dataArrayLength / 2)] = bytePlace;
-        zeroesLoopSpot++;
-      }
-
-      bytePlace += 1; //increment bytePlace
-
-      //once the data is all recieved, checksum and re-set counters
-     // Serial.print("byte place: ");
-     // Serial.println(bytePlace);
-      if (bytePlace == dataSize + 5) {
-        checkSumByte = calculateChecksum(sumBytes);  //the 8 least significant bits of sumBytes
-
-        if (data != checkSumByte) {
-          Serial.println(F("checksum error"));
-          Serial.print("Loop Length: ");
-          Serial.println(loopLength);
-          return false;
-        }
-//        Serial.println("Checksum is good");
-
-        Serial.print("Loop Length: ");
-        Serial.println(loopLength);
-        return true;
-      }
-      else {
-        sumBytes += data; // this is to compare with the checksum byte
-        //Serial.print(F("sum: "));
-        //Serial.println(sumBytes);
-      }
-    }
-  }
-  
-}
-
-*/
 // takes in the rawhex data received from the ECU, applies the interpretation calculations to get a readable value
 bool interpretECUdata(ECU_Data* interpData, int* rawArray){
     if(rawArray[1] != 0xf0) //ignore anything that isn't being sent to the diagnostic tool (us)
