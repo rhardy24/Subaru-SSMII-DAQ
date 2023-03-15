@@ -8,9 +8,13 @@
 
 void setup() {
   Serial.begin(SERIAL_MONITOR_BAUD);
+  while(!Serial)
+    delay(10);
 
   loggerBegin();
   gaugesBegin();
+
+  delay(250);
 
   ssmBegin();
 }
@@ -19,6 +23,4 @@ void loop() {
   receiveECUdata();
   logCurrentValues(logFile, &interpretted_data);
   updateGauges(&interpretted_data, 1);
-
-  delay(5);
 }

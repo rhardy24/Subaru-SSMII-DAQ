@@ -47,13 +47,13 @@
      * VARIABLE DECLARATION
     **************************************************************************/
     //stores time from millis() when previous message was read
-    extern uint32_t prevReadTime;
+    extern double prevReadTime;
 
     // data request message
     extern byte ssmReqMessage[REQUEST_MESSAGE_SIZE];
     
     //array to store the raw hex bytes received from the ECU
-    extern uint8_t ECUbytes[RECEIVE_MESSAGE_SIZE];
+    extern int ECUbytes[RECEIVE_MESSAGE_SIZE];
 
     //true if the resposne from the ECU was good (correct format, sent to this device, good checksum)
     extern bool responseGood;
@@ -87,10 +87,10 @@
     void writeSSM(byte requestMessage[]);
 
     // reads the raw data from the ECU off of the serial line
-    bool readECU(uint8_t* rawDataArray);
+    bool readECU(int* rawDataArray);
 
     // takes in the rawhex data received from the ECU, applies the interpretation calculations to get a readable value
-    bool interpretECUdata(ECU_Data* interpData, uint8_t* rawArray);
+    bool interpretECUdata(ECU_Data* interpData, int* rawArray);
 
     // outputs interpretted ECU data to the specified stream (serial, file, etc.)
     void outputValues(Stream &outStream, ECU_Data* data);
