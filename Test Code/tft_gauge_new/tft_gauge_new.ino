@@ -134,15 +134,46 @@ typedef struct{
   double EFT;
 } ECU_Data;
 
+typedef struct{
+    bool ect = true;
+    bool rpm = true;
+    bool map = true;
+    bool speedkm = true;
+    bool timing = true;
+    bool iat = true;
+    bool tps = true;
+    bool batvolt = true;
+    bool eft = true;
+} gauge_status_t;
+
 ECU_Data data;
+gauge_status_t gauge_status;
+
+uint8_t prevScreen = 0;
+
+bool newTouch = 0;
 
 bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum){
-  if(screenNum == 1){
-      DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
-      DrawBarChartH(tft, 100, 180, 150, 30, 0, 20, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
-      DrawDial(tft, 230, 90, 80, 0, 7000 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
+  if (screenNum != prevScreen)
+    tft.fillScreen(BLACK);
+  
+  if(screenNum == 0){
+    DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
+    DrawBarChartH(tft, 100, 180, 150, 30, 0, 100, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
+    DrawDial(tft, 230, 90, 80, 0, 100 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
+  }
+  else if(screenNum == 1){
+    DrawBarChartH(tft, 100, 180, 150, 30, 0, 100, 2, interpretted_data->timing, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "timing", gauge_status.map);
+    DrawBarChartH(tft, 100, 130, 150, 30, 0, 100, 2, interpretted_data->IAT, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "IAT", gauge_status.map);
+    DrawBarChartH(tft, 100, 70, 150, 30, 0, 100, 2, interpretted_data->EFT, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "EFT", gauge_status.map);
+  }
+  else if(screenNum == 2){
+    DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
+    DrawBarChartV(tft, 60,  210, 30, 180, 0, 100 , 10, interpretted_data->MAP , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "MAP", gauge_status.tps);
+    DrawBarChartV(tft, 110,  210, 30, 180, 0, 100 , 10, interpretted_data->RPM , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "RPM", gauge_status.tps);
   }
 
+  prevScreen = screenNum;
   return true;
 }
 
@@ -158,6 +189,8 @@ void setup() {
 
 }
 
+TS_Point avgPoint;
+
 void loop(void) {
 
   for (int i = 1; i < 50; i++){
@@ -165,15 +198,15 @@ void loop(void) {
     uint8_t curScreen = 0;
 
     if(ctp.touched()){
-      TS_Point avgPoint;
+      newTouch = 1;
       avgPoint.x = 0;
       avgPoint.y = 0;
       int numPoints = 0;
-      while(!ctp.touched){
+      while(!ctp.touched()){
         TS_Point curPoint = ctp.getPoint();
         numPoints++;
-        curPoint.x = map(p.x, 0, 240, 240, 0);
-        curPoint.y = map(p.y, 0, 320, 320, 0);
+        curPoint.x = map(curPoint.x, 0, 240, 240, 0);
+        curPoint.y = map(curPoint.y, 0, 320, 320, 0);
         avgPoint.x += curPoint.x;
         avgPoint.y += curPoint.y;
       }
@@ -181,23 +214,31 @@ void loop(void) {
       avgPoint.y = avgPoint.y/numPoints;
     }
 
-    /* TOUCH SCREEN PART TO CHANGE WHICH SCREEN
-    *   if (touch right)
-    *     curScreen = (curScreen+1)%3;
-    *   else if (touch left){
-    *     curScreen--;
-    *     if (curScreen == -1)
-    *       curScreen = 2;
-    *   }   
-    */
+    if(newTouch){
+      if(avgPoint.y > (320/2))
+        curScreen = (curScreen+1)%3;
+      else{
+        curScreen--;
+        if(curScreen == -1)
+          curScreen = 2;
+      }
+      newTouch = 0;
+    }
   
-    val = 1000.0*sin(i/50.0*3.14159);
-    Serial.println(bvolts);
+    double val = 1000.0*sin(i/50.0*3.14159);
+    Serial.println(val);
 
-    for(int i = 0; i < 9; i++)
-      data[i] = val;
-  
-    updateGauges(data, curScreen);
+    data.ECT=val;
+    data.MAP=val;
+    data.RPM=val;
+    data.speedkm=val;
+    data.timing=val;
+    data.IAT=val;
+    data.TPS=val;
+    data.BATVOLT=val;
+    data.EFT=val;
+
+    updateGauges(&data, curScreen);
 
     delay(10);
   }
