@@ -14,11 +14,22 @@
 //stores time from millis() when previous message was read
 double prevReadTime = 0;
 
-// data request message
-byte ssmReqMessage[REQUEST_MESSAGE_SIZE] = {  0x80, 0x10, 0xf0, 0x20, 0xa8, 0x01, 
-                                            0x00, 0x00, 0x08, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x10, 
-                                            0x00, 0x00, 0x11, 0x00, 0x00, 0x12, 0x00, 0x00, 0x15, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x2a, 
-                                            0x09    };
+#ifdef NEW_REQ
+    // new request message
+    byte ssmReqMessage[REQUEST_MESSAGE_SIZE] = {  0x80, 0x10, 0xf0, 0x20, 0xa8, 0x01, 
+                                                0x00, 0x00, 0x08, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x10, 
+                                                0x00, 0x00, 0x11, 0x00, 0x00, 0x12, 0x00, 0x00, 0x15, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x2a, 
+                                                0x00, 0x00, 0x07, 0x00, 0x00, 0x13, 0x00, 0x00, 0x14, 0x00, 0x00, 0x20, 0x00, 0x00, 0x22, 
+                                                0x00, 0x00, 0x3a, 0x00, 0x00, 0x3b, 0x00, 0x00, 0x3c, 0x00, 0x01, 0x18, 0x00, 0x00, 0x46, 
+                                                0x00, 0x00, 0x47, 0x00, 0x01, 0x05, 0x00, 0x01, 0x06,
+                                                0x09    };
+#else
+    // data request message
+    byte ssmReqMessage[REQUEST_MESSAGE_SIZE] = {  0x80, 0x10, 0xf0, 0x20, 0xa8, 0x01, 
+                                                0x00, 0x00, 0x08, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x10, 
+                                                0x00, 0x00, 0x11, 0x00, 0x00, 0x12, 0x00, 0x00, 0x15, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x2a, 
+                                                0x09    };
+#endif
 
 //array to store the raw hex bytes received from the ECU
 int ECUbytes[RECEIVE_MESSAGE_SIZE]; //try changing back to uint8
@@ -227,6 +238,21 @@ bool interpretECUdata(ECU_Data* interpData, int* rawArray){
     interpData->TPS = rawArray[12]*100/255.0;  //percent
     interpData->BATVOLT = rawArray[13]*0.08; //volt
     interpData->EFT = rawArray[14]-40;       //deg C
+
+    #ifdef NEW_REQ
+        interpData->engLoad = rawArray[15]*100/255;     //%
+        interpData->MAF = ((rawArray[16] << 8) | rawArray[17])/100;     //g/s
+        interpData->injPulseWidth = rawArray[18] * 0.256;       //ms
+        interpData->knockCorr = (rawArray[19] - 128)/2;         //deg
+        interpData->altDuty = rawArray[20];             //%
+        interpData->fuelPumpDuty = rawArray[21]/2.55;   //%
+        interpData->inVVTadv = rawArray[22]-50;         //deg
+        interpData->exVVTadv = rawArray[23]-50;         //deg
+        interpData->lambda1 = rawArray[24]/128;         //lambda
+        interpData->lambda2 = rawArray[25]/128;         //lambda
+        interpData->fuelPress = rawArray[26]*0.04;      //MPa
+        interpData->exTemp = (rawArray[27]+40)*5;       //deg C
+    #endif
     return true;
 }
 

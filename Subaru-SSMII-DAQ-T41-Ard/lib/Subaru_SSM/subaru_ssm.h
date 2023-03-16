@@ -18,11 +18,17 @@
     /*************************************************************************
      * DEFINITIONS
     **************************************************************************/
+    //#define NEW_REQ
+    
     //delay in milliseconds between reading in bytes
     #define READ_DELAY 2
 
     //number of addresses in the request message
-    #define NUM_REQUESTED_ADDRESSES 10
+    #ifdef NEW_REQ
+        #define NUM_REQUESTED_ADDRESSES 23
+    #else
+        #define NUM_REQUESTED_ADDRESSES 10
+    #endif
 
     #define REQUEST_MESSAGE_SIZE (6+3*NUM_REQUESTED_ADDRESSES+1)
     #define RECEIVE_MESSAGE_SIZE (5+NUM_REQUESTED_ADDRESSES+1)
@@ -41,6 +47,21 @@
         double TPS;
         double BATVOLT;
         double EFT;
+
+        #ifdef NEW_REQ
+            double engLoad;
+            double MAF;
+            double injPulseWidth;
+            double knockCorr;
+            double altDuty;
+            double fuelPumpDuty;
+            double inVVTadv;
+            double exVVTadv;
+            double lambda1;
+            double lambda2;
+            double fuelPress;
+            double exTemp;
+        #endif
     } ECU_Data;
 
     /*************************************************************************
