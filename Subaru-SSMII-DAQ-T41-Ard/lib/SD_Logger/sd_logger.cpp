@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include <config.h>
-#include <declarations.h>
 
 #include <sd_logger.h>
-#include <subaru_ssm.h>
+
+/*************************************************************************
+ * INSTATIATION DEFINITIONS
+**************************************************************************/
+File logFile;
 
 
 /*************************************************************************
@@ -12,28 +15,31 @@
 
 // initializes the sd logger
 bool loggerBegin(){
+  #ifdef DEBUG
     if (!SD.begin(chipSelect)) {
       Serial.println("SD initialization failed!");
     }
     else
       Serial.println("SD Initialized");
+  #endif
 
-    // CORRECT THE FILE NAME
-    logFile = SD.open("newlog.CSV", FILE_WRITE);
+  // CORRECT THE FILE NAME
+  logFile = SD.open("newlog.CSV", FILE_WRITE);
    
+  #ifdef DEBUG
     if(logFile)
       Serial.println("File opened");
     else
       Serial.println("File open failed");
-  
-    outputHeaders(logFile);
-    logFile.flush();
+  #endif
 
-    return true;
+  outputHeaders(logFile);
+  logFile.flush();
+
+  return true;
 }
 
-// logs values currently in the ECU_Data struct to the log file (SD card)
-void logCurrentValues(File log, ECU_Data* data){
-  outputValues(log, data);
-  log.flush();
+// outputs data column headers to the specified stream (serial, file, etc.)
+void outputHeaders(Stream &outStream){
+  outStream.println("RPM\tSpeed\tTPS\tMAP\tTiming\tECT\tIAT\tEFT\tVoltage");
 }

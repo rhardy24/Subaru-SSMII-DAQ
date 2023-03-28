@@ -5,24 +5,30 @@
 
 #include <Arduino.h>
 #include <config.h>
-#include <declarations.h>
 
-#ifndef SUBARU_SSM_H
-#define SUBARU_SSM_H
+#ifndef SUBARU_SSM__H_
+#define SUBARU_SSM__H_
 
     /*************************************************************************
-     * USER SETTINGS
+     * EXTERNAL INCLUDES
     **************************************************************************/
-
+    #include <SD.h>
+    #include <sd_logger.h>
 
     /*************************************************************************
      * DEFINITIONS
     **************************************************************************/
+    //#define NEW_REQ
+    
     //delay in milliseconds between reading in bytes
     #define READ_DELAY 2
 
     //number of addresses in the request message
-    #define NUM_REQUESTED_ADDRESSES 10
+    #ifdef NEW_REQ
+        #define NUM_REQUESTED_ADDRESSES 23
+    #else
+        #define NUM_REQUESTED_ADDRESSES 10
+    #endif
 
     #define REQUEST_MESSAGE_SIZE (6+3*NUM_REQUESTED_ADDRESSES+1)
     #define RECEIVE_MESSAGE_SIZE (5+NUM_REQUESTED_ADDRESSES+1)
@@ -41,31 +47,43 @@
         double TPS;
         double BATVOLT;
         double EFT;
+
+        #ifdef NEW_REQ
+            double engLoad;
+            double MAF;
+            double injPulseWidth;
+            double knockCorr;
+            double altDuty;
+            double fuelPumpDuty;
+            double inVVTadv;
+            double exVVTadv;
+            double lambda1;
+            double lambda2;
+            double fuelPress;
+            double exTemp;
+        #endif
     } ECU_Data;
 
     /*************************************************************************
-     * VARIABLES
+     * VARIABLE DECLARATION
     **************************************************************************/
     //stores time from millis() when previous message was read
-    uint32_t prevReadTime;
+    extern double prevReadTime;
 
     // data request message
-    byte ssmReqMessage[REQUEST_MESSAGE_SIZE] = {  0x80, 0x10, 0xf0, 0x20, 0xa8, 0x01, 
-                                                0x00, 0x00, 0x08, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x10, 
-                                                0x00, 0x00, 0x11, 0x00, 0x00, 0x12, 0x00, 0x00, 0x15, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x2a, 
-                                                0x09    };
+    extern byte ssmReqMessage[REQUEST_MESSAGE_SIZE];
     
     //array to store the raw hex bytes received from the ECU
-    uint8_t ECUbytes[RECEIVE_MESSAGE_SIZE];
+    extern int ECUbytes[RECEIVE_MESSAGE_SIZE];
 
     //true if the resposne from the ECU was good (correct format, sent to this device, good checksum)
-    bool responseGood;
+    extern bool responseGood;
 
     /*************************************************************************
-     * INSTATIATIONS
+     * INSTATIATION DECLARATION
     **************************************************************************/
     //struct holding the interpretted ECU data
-    ECU_Data interpretted_data = {};
+    extern ECU_Data interpretted_data;
 
     /*************************************************************************
      * FUNCTION PROTOTYPES
@@ -91,5 +109,14 @@
 
     // reads the raw data from the ECU off of the serial line
     bool readECU(int* rawDataArray);
+
+    // takes in the rawhex data received from the ECU, applies the interpretation calculations to get a readable value
+    bool interpretECUdata(ECU_Data* interpData, int* rawArray);
+
+    // outputs interpretted ECU data to the specified stream (serial, file, etc.)
+    void outputValues(Stream &outStream, ECU_Data* data);
+
+    // logs values currently in the ECU_Data struct to the log file (SD card)
+    void logCurrentValues(File log, ECU_Data* data);
 
 #endif
