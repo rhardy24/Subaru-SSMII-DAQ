@@ -144,6 +144,10 @@ typedef struct{
     bool tps = true;
     bool batvolt = true;
     bool eft = true;
+
+    void gauge_status_set(bool status){
+      ect = rpm = map = speedkm = timing = iat = tps = batvolt = eft = true;
+    }
 } gauge_status_t;
 
 ECU_Data data;
@@ -154,23 +158,26 @@ uint8_t prevScreen = 0;
 bool newTouch = 0;
 
 bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum){
-  if (screenNum != prevScreen)
+  if (screenNum != prevScreen){
     tft.fillScreen(BLACK);
+    gauge_status.gauge_status_set(true);
+  }
+    
   
   if(screenNum == 0){
-    DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
-    DrawBarChartH(tft, 100, 180, 150, 30, 0, 100, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
-    DrawDial(tft, 230, 90, 80, 0, 100 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
+    DrawBarChartV(tft, 10,  210, 30, 180, 0, 1000 , 100, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
+    DrawBarChartH(tft, 100, 180, 150, 30, 0, 1000, 250, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
+    DrawDial(tft, 230, 90, 80, 0, 1000 , 100, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
   }
   else if(screenNum == 1){
-    DrawBarChartH(tft, 100, 180, 150, 30, 0, 100, 2, interpretted_data->timing, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "timing", gauge_status.map);
-    DrawBarChartH(tft, 100, 130, 150, 30, 0, 100, 2, interpretted_data->IAT, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "IAT", gauge_status.map);
-    DrawBarChartH(tft, 100, 70, 150, 30, 0, 100, 2, interpretted_data->EFT, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "EFT", gauge_status.map);
+    DrawBarChartH(tft, 100, 180, 150, 30, 0, 1000, 100, interpretted_data->timing, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "timing", gauge_status.timing);
+    DrawBarChartH(tft, 100, 90, 150, 30, 0, 1000, 100, interpretted_data->IAT, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "IAT", gauge_status.iat);
+    DrawBarChartH(tft, 100, 20, 150, 30, 0, 1000, 100, interpretted_data->EFT, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "EFT", gauge_status.eft);
   }
   else if(screenNum == 2){
-    DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
-    DrawBarChartV(tft, 60,  210, 30, 180, 0, 100 , 10, interpretted_data->MAP , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "MAP", gauge_status.tps);
-    DrawBarChartV(tft, 110,  210, 30, 180, 0, 100 , 10, interpretted_data->RPM , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "RPM", gauge_status.tps);
+    DrawBarChartV(tft, 10,  210, 30, 180, 0, 1000 , 100, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
+    DrawBarChartV(tft, 100,  210, 30, 180, 0, 1000 , 100, interpretted_data->MAP , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "MAP", gauge_status.map);
+    DrawBarChartV(tft, 200,  210, 30, 180, 0, 1000 , 100, interpretted_data->RPM , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "RPM", gauge_status.rpm);
   }
 
   prevScreen = screenNum;
@@ -189,44 +196,52 @@ void setup() {
 
 }
 
+uint8_t curScreen = 0;
+
 TS_Point avgPoint;
 
 void loop(void) {
 
   for (int i = 1; i < 50; i++){
 
-    uint8_t curScreen = 0;
 
     if(ctp.touched()){
       newTouch = 1;
-      avgPoint.x = 0;
+      /*avgPoint.x = 0;
       avgPoint.y = 0;
-      int numPoints = 0;
+      double numPoints = 0;
       while(!ctp.touched()){
         TS_Point curPoint = ctp.getPoint();
         numPoints++;
         curPoint.x = map(curPoint.x, 0, 240, 240, 0);
         curPoint.y = map(curPoint.y, 0, 320, 320, 0);
+        Serial.println("touch");
+        Serial.println(curPoint.y);
         avgPoint.x += curPoint.x;
         avgPoint.y += curPoint.y;
       }
       avgPoint.x = avgPoint.x/numPoints;
       avgPoint.y = avgPoint.y/numPoints;
+      */
+      Serial.println("touch");
+      avgPoint = ctp.getPoint();
     }
 
     if(newTouch){
-      if(avgPoint.y > (320/2))
+      Serial.print("New touch: ");
+      Serial.println(avgPoint.y);
+      if(avgPoint.y > (320/2.0))
         curScreen = (curScreen+1)%3;
       else{
         curScreen--;
-        if(curScreen == -1)
+        if(curScreen == 255)
           curScreen = 2;
       }
       newTouch = 0;
     }
   
     double val = 1000.0*sin(i/50.0*3.14159);
-    Serial.println(val);
+    Serial.println(curScreen);
 
     data.ECT=val;
     data.MAP=val;
