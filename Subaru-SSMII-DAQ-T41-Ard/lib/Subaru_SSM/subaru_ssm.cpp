@@ -222,6 +222,7 @@ bool readECU(int* rawDataArray){
                 sumBytes += currentByte;
         }
     }
+    return false;
 }
 
 // takes in the rawhex data received from the ECU, applies the interpretation calculations to get a readable value
