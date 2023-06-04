@@ -17,7 +17,8 @@
 
     /*************************************************************************
      * DEFINITIONS
-    **************************************************************************/
+    **************************************************************************/  
+    //Undefine to use the new, longer request. Currently not working, doesn't receive a response in time
     //#define NEW_REQ
     
     //delay in milliseconds between reading in bytes
