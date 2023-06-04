@@ -10,6 +10,8 @@
     #include <SPI.h>
     #include <Adafruit_ILI9341.h>
     #include <subaru_ssm.h>
+    #include <Adafruit_FT6206.h>
+    #include <Wire.h>
 
     /*************************************************************************
      * DATA STRUCTURES
@@ -25,8 +27,11 @@
         bool tps = true;
         bool batvolt = true;
         bool eft = true;
-    } gauge_status_t;
 
+        void gauge_status_set(bool status){
+            ect = rpm = map = speedkm = timing = iat = tps = batvolt = eft = true;
+    }
+    } gauge_status_t;
 
     /*************************************************************************
      * PIN ASSIGNMENTS
@@ -37,19 +42,31 @@
     #define TFT_CLK 13
     #define TFT_RST 14
     #define TFT_MISO 12
+    #define ADJ_PIN A0
 
 
     /*************************************************************************
      * INSTANTIATION DECLARATIONS
     **************************************************************************/
     extern Adafruit_ILI9341 tft;
+    extern Adafruit_FT6206 ctp;
+
     extern gauge_status_t gauge_status;
+
+    extern uint8_t prevScreen;
+    extern uint8_t curScreen;
+
+    extern TS_Point touchPoint;
 
     /*************************************************************************
      * FUNCTION PROTOTYPES
     **************************************************************************/
     //initializes the tft gauge display
     bool gaugesBegin();
+
+    // checks touchscreen for new touches, returns the new screen number
+    // if touch was detected
+    uint8_t checkTouch();
 
     // takes values from the ECU_Data struct to update the tft gauges
     bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum);

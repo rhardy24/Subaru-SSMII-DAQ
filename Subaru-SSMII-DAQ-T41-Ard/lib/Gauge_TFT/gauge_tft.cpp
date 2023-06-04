@@ -7,7 +7,14 @@
  * INSTANTIATION DEFINITIONS   
 **************************************************************************/
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
+Adafruit_FT6206 ctp = Adafruit_FT6206();
+
 gauge_status_t gauge_status;
+
+uint8_t prevScreen = 0;
+uint8_t curScreen = 0;
+
+TS_Point touchPoint;
 
 /*************************************************************************
  * FUNCTIONS
@@ -18,17 +25,53 @@ bool gaugesBegin(){
     tft.begin();
     tft.fillScreen(BLACK);
     tft.setRotation(1);
+    ctp.begin(40);
+    
     return true;
+}
+
+// checks touchscreen for new touches, returns the new screen number
+// if touch was detected
+uint8_t checkTouch(){
+  if(ctp.touched()){
+    touchPoint = ctp.getPoint();
+    if(touchPoint.y > (320/2.0))
+        curScreen = (curScreen+1)%3;
+      else{
+        curScreen--;
+        if(curScreen == 255)
+          curScreen = 2;
+      }
+  }
+
+  return curScreen;
 }
 
 // takes values from the ECU_Data struct to update the tft gauges
 bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum){
-    if(screenNum == 1){
-        DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
-        DrawBarChartH(tft, 100, 180, 150, 30, 0, 20, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
-        DrawDial(tft, 230, 90, 80, 0, 7000 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
-    }
-    return true;
+  if (screenNum != prevScreen){
+    tft.fillScreen(BLACK);
+    gauge_status.gauge_status_set(true);
+  }
+
+  if(screenNum == 0){
+    DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
+    DrawBarChartH(tft, 100, 180, 150, 30, 0, 20, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
+    DrawDial(tft, 230, 90, 80, 0, 8000 , 2000, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
+  }
+  else if(screenNum == 1){
+    DrawBarChartV(tft, 10,  210, 30, 180, -20, 120, 20, interpretted_data->ECT , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "ECT", gauge_status.ect);
+    DrawBarChartV(tft, 100,  210, 30, 180, -20, 70, 15, interpretted_data->IAT , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "IAT", gauge_status.iat);
+    DrawBarChartV(tft, 200,  210, 30, 180, 10, 16, 1, interpretted_data->BATVOLT, 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "VOLT", gauge_status.batvolt);
+  }
+  else if(screenNum == 2){
+    DrawBarChartV(tft, 10,  210, 30, 180, 0, 80, 20, interpretted_data->timing, 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TIMING", gauge_status.timing);
+    DrawBarChartV(tft, 100,  210, 30, 180, 0, 20 , 4, interpretted_data->MAP , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "MAP", gauge_status.map);
+    DrawBarChartV(tft, 200,  210, 30, 180, -20, 55 , 15, interpretted_data->EFT, 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "EFT", gauge_status.eft);
+  }
+
+  prevScreen = screenNum;
+  return true;
 }
 
 /*

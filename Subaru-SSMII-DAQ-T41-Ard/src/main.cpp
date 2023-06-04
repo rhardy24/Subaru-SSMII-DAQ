@@ -24,5 +24,8 @@ void setup() {
 void loop() {
   receiveECUdata();
   logCurrentValues(logFile, &interpretted_data);
-  updateGauges(&interpretted_data, 1);
+  //uint8_t newScreenNum = checkTouch();
+  //updateGauges(&interpretted_data, newScreenNum);
+  updateGauges(&interpretted_data, 0);
+
 }
