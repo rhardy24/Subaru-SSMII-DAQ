@@ -34,6 +34,7 @@ One issue faced with the Teensy 4.1 was regarding its voltage input. A criteria 
 - [ ] Add multiple screens: Use the touchscreen to toggle through multiple screens/gauge layouts. The display is too small to show all of the received data at once, thus multiple display layouts would be nice.
 - [ ] Add TCU communication: It would be nice to get information from the transmission controller (TCU), but this is not described in ROMRaider. Research what could be requested from the TCU, and figure out if it is worth sacrificing ECU data rate for.
 - [ ] Write script to convert csv data to MoTeC i2 log files: MoTeC i2 is an industry used data viewing software, typically used with MoTeC Motorsport ECUs. Is it possible to convert data into the MoTeC file types to view in i2? Would durastically improve the viewing experience of the logs.
+- [ ] Uses classes more. TFT is a good example where a class should be used
 - [ ] Move to an RTOS. Both for the learning, and for proper scheduling and timing of the program, using an RTOS over the Arduino Framework would be a welcomed upgrade to the project.
 
 # References
