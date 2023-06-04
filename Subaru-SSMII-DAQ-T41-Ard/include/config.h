@@ -10,5 +10,7 @@
 
     //comment out following line to disable debug messages to USB Serial monitor
     #define DEBUG
+
+    #define SCREEN_NUM 2
     
 #endif

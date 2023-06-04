@@ -70,6 +70,8 @@ bool receiveECUdata(){
         #ifdef DEBUG
             Serial.println("Serial2 unavailable");
         #endif
+
+
         return false;
     }
 

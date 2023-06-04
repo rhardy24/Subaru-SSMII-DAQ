@@ -24,10 +24,17 @@ bool gaugesBegin(){
 // takes values from the ECU_Data struct to update the tft gauges
 bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum){
     if(screenNum == 1){
-        DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
-        DrawBarChartH(tft, 100, 180, 150, 30, 0, 20, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
-        DrawDial(tft, 230, 90, 80, 0, 7000 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
+      DrawBarChartV(tft, 10,  210, 30, 180, 0, 100 , 10, interpretted_data->TPS , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "TPS", gauge_status.tps);
+      DrawBarChartH(tft, 100, 180, 150, 30, 0, 20, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
+      DrawDial(tft, 230, 90, 80, 0, 7000 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
     }
+    if(screenNum == 2){
+      DrawBarChartV(tft, 10,  210, 30, 180, -20, 120, 20, interpretted_data->ECT , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "ECT", gauge_status.ect);
+      DrawBarChartV(tft, 80,  210, 30, 180, -20, 70, 15, interpretted_data->IAT , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "IAT", gauge_status.iat);
+      DrawBarChartV(tft, 150,  210, 30, 180, 10, 16, 1, interpretted_data->BATVOLT, 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "VOLT", gauge_status.batvolt);
+      DrawBarChartV(tft, 200,  210, 30, 180, -20, 55 , 15, interpretted_data->EFT, 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "EFT", gauge_status.eft);    
+    }
+    
     return true;
 }
 
