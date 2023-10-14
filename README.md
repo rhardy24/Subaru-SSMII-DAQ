@@ -3,7 +3,7 @@ A Teensy 4.1 project, interfacing with the SSM Protocol in K-Line based Subarus 
 
 Code is built and uploaded using VSCode and PlatformIO. It currently uses the Arduino framework.
 
-CURRENTLY UNFINISHED
+Currently a work in progress
 
 # Overview
 In 2008, CAN bus based ISO 15765-4 became stadardized to be used for on-board diagnostics (OBD) in all new vehicles. Prior to this, manufacturers used varying communication protocols and layers for OBD. 
