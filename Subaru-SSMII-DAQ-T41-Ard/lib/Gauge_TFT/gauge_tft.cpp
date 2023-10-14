@@ -28,12 +28,17 @@ bool updateGauges(ECU_Data* interpretted_data, uint8_t screenNum){
       DrawBarChartH(tft, 100, 180, 150, 30, 0, 20, 2, interpretted_data->MAP, 2, 2, GREEN, DKGREEN,  GREEN, WHITE, BLACK, "MAP", gauge_status.map);
       DrawDial(tft, 230, 90, 80, 0, 7000 , 500, 240, interpretted_data->RPM,  4 , 0, RED, WHITE, BLACK, "RPM", gauge_status.rpm);
     }
+    //seems theres a lag issue with having too many gauges at once. Having 4 causes it to crash, stable with 3
     if(screenNum == 2){
       DrawBarChartV(tft, 10,  210, 30, 180, -20, 120, 20, interpretted_data->ECT , 3 , 0, BLUE, DKBLUE, BLUE, WHITE, BLACK, "ECT", gauge_status.ect);
       DrawBarChartV(tft, 90,  210, 30, 180, -20, 70, 15, interpretted_data->IAT , 2 , 0, WHITE, GREY, WHITE, WHITE, BLACK, "IAT", gauge_status.iat);
       DrawBarChartV(tft, 165,  210, 30, 180, 10, 16, 1, interpretted_data->BATVOLT, 2 , 1, YELLOW, DKYELLOW, YELLOW, WHITE, BLACK, "VOLT", gauge_status.batvolt);
       DrawBarChartV(tft, 250,  210, 30, 180, -20, 55 , 15, interpretted_data->EFT, 2 , 0, ORANGE, DKORANGE, ORANGE, WHITE, BLACK, "EFT", gauge_status.eft);    
     }
+    if(screenNum == 3){
+      DrawBarChartV(tft, 10,  210, 50, 180, -20, 120, 20, interpretted_data->ECT , 3 , 1, BLUE, DKBLUE, BLUE, WHITE, BLACK, "ECT", gauge_status.ect);
+      DrawBarChartV(tft, 120,  210, 50, 180, -20, 70, 15, interpretted_data->IAT , 2 , 1, WHITE, GREY, WHITE, WHITE, BLACK, "IAT", gauge_status.iat);
+      DrawBarChartV(tft, 230,  210, 50, 180, 10, 16, 1, interpretted_data->BATVOLT, 2 , 1, YELLOW, DKYELLOW, YELLOW, WHITE, BLACK, "VOLT", gauge_status.batvolt);    }
     
     return true;
 }
